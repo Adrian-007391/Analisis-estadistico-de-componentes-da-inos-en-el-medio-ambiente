@@ -1,0 +1,818 @@
+---
+title: "Reto Estadistica"
+author: "Adrian Eduardo Treviño Peña A01198211"
+date: "3/11/2022"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduccion 
+
+La contaminación es un problema que poco a poco ah formado una mayor parte de nuestras vidas cotidianas, afectandola cada vez en mas lugares. Pero en la Ciudad de Mexico esta pasando de una simple preocupacion social a un peligro para la salud de sus habitantes. Segun un reporte hecho por Latinus (Latinus, 2020), greenpeace dio a conocer que la ciudad de mexico es la quinta ciudad con mas muertes prematuras a causa de contaminacion ambiental. Pero ademas de las muertes, se demuestra que los altos niveles de toxinas en el aire de la ciudad de mexico pueden causar fatiga, dolor de cabeza, e incluso ansiedad (telemundo,2021)
+
+En la siguiente base de datos se nos dan los niveles de diferentes toxinas en el aire en la ciudad de Mexico
+
+## Extraccion de datos
+
+```{r}
+M=read.csv("ABC2021_sin_NA_muestra_aleat_1000.csv", header = TRUE)
+```
+
+## Analisis de datos 
+
+### Fecha y hora 
+
+las variables de fecha y hora representan la fecha y la hora en la que los demas datos fueron extraidos 
+
+### NOX 
+
+NOx es un termino utilizado para los gases reactivos como $NO_2$ y NO . Esta variable es la que nos va a explicar el comportamiento de las demas variables, ya que esta ya incluye a los componentes NO y $NO_2$. Por lo tanto, es mas probable encontrar correlaciones fuertes entre esos dos componentes y como $NO_2$ es uno de los principales contaminantes (PRTR España, 2022), es conveniente tenerla como variable dependiente
+
+### CO y CO2 
+
+el monoxido de carbono y el dioxido de carbono son componentes basados en oxigeno y carbono. Estas dos en exceso pueden llegar a causar enfermedades como hipercapnia (tfm, 2022)
+
+### NO , NO2 
+
+el monoxido de nitrogeno y el dioxido de nitrogeno son componentes basados en el oxigeno y el nitrogeno. Estos dos componentes en exceso puede causar  "quemaduras, espasmos y dilatación de los tejidos en la garganta y las vías respiratorias superiores, reduciendo la oxigenación de los tejidos del cuerpo, produciendo acumulación de líquido en los pulmones y la muerte". (tfm, 2022)
+
+# O3 
+
+el **ozono** es un componente basado en oxigeno que puede causar daños en la salud como "tos, irritación en la garganta, empeoramiento de afecciones como asma, bronquitis y enfisema y hasta daños pulmonares permanentes, si la exposición a éste es habitual." (Medlineplus, 2021)
+
+lo que este reporte intenta definir es: ¿Cuales son los componentes del aire que estan influyendo en la contaminacion y cual es su relacion entre ellos
+
+
+# Depuracion de datos 
+
+Como la fecha y la hora son irrelevantes para nuestra investigacion, es lo primero que vamos a quitar. 
+
+```{r}
+M1 = M[,-1:-3] 
+```
+
+# Obtension de Correlaciones 
+
+Ahora vamos a sacar las correlaciones entre los componentes individuales para ver que es lo que le afecta a la contaminacion. 
+
+```{r}
+cor(M1) #Matriz de correlación de M1
+plot(M1, col = "blue") #Matriz de gráficos de dispersión de M1
+```
+
+## Que correlaciones nos importan? 
+
+Como ya aclaramos que $NO_x$ es nuestra variable independiente, vamos a basar nuestras correlaciones con *x* como los demas componentes y  *y* como $NO_x$
+
+
+# Analisis de Correlacion 
+
+Para los analisis de correlacion, voy a utilizar una prueba de hipotesis 
+
+## Creacion de hipotesis
+
+- $H_0$ : r= 0
+
+- $H_1$ : r≠ 0 
+
+- Valor de significancia ($\alpha$) = 0.05 
+
+- Distribucion : t de student de dos colas
+
+  - Es de dos colas por que puede ser una correlacion positiva o negativa
+
+- Calculo de $t_0$ 
+
+```{r}
+alpha = 0.05 
+n=1000 
+t_0 = qt(1-alpha/2 , n-2 )
+
+cat("el valor frontera es ", t_0 , "\n")
+
+```
+
+## Prueba de desision
+
+yo rechazo si : 
+
+- **Regla clasica** :|t*|> 1.96
+
+- **Regla de valor p** : p< 0.05
+
+### CO2 y NOx 
+
+```{r}
+TCO2 = cor.test(M$CO2,M$NOX,alternative = "two.sided" , method = "pearson" , conf.level = 1-alpha/2)
+TCO2
+
+```
+### Analisis de datos : 
+
+Ya que el valor de t* es 7.0874 y el valor de p es 2.581e-12, podemos rechazar $H_0$ y concluir que si hay una correlacion entre CO2 y NOx y su valor de correlacion es de 0.2189064, osea una correlacion positiva
+
+### CO y NOx 
+
+```{r}
+TCO = cor.test(M$CO,M$NOX,alternative = "two.sided" , method = "pearson" , conf.level = 1-alpha/2)
+TCO
+
+```
+
+### Analisis de datos : 
+
+Ya que el valor de t* es 91.326 y el valor de p es 2.2e-16, podemos rechazar $H_0$ y concluir que si hay una correlacion entre CO y NOx y su correlacion es de 0.9450553, osea una correlacion positiva
+
+### NO2 y NOx 
+
+```{r}
+TNO2 = cor.test(M$NO2,M$NOX,alternative = "two.sided" , method = "pearson" , conf.level = 1-alpha/2)
+TNO2
+
+```
+### Analisis de datos : 
+
+Ya que el valor de t* es 40.483 y el valor de p es 2.2e-16, podemos rechazar $H_0$ y concluir que si hay una correlacion entre NO2 y NOx y su correlacion es de 0.7883659, osea una correlacion positiva
+
+### NO y NOx 
+
+```{r}
+TNO = cor.test(M$NO,M$NOX,alternative = "two.sided" , method = "pearson" , conf.level = 1-alpha/2)
+TNO
+
+```
+### Analisis de datos : 
+Ya que el valor de t* es 7.0874 y el valor de p es 2.581e-12, podemos rechazar $H_0$ y concluir que si hay una correlacion entre CO2 y NOx y su correlacion es de 0.7883659, osea una correlacion positiva
+
+### O3 y NOx 
+
+```{r}
+TO3 = cor.test(M$O3,M$NOX,alternative = "two.sided" , method = "pearson" , conf.level = 1-alpha/2)
+TO3
+
+```
+
+### Analisis de datos 
+
+Como el valor de |t*| es 15.94 y el valor de p es 2.2e-16, podemos rechazar $H_0$ y decir que si tienen una correlacion. Tambien podemos recalcar que en este caso, hay una correlacion de -0.4504847, osea una correlacion negativa (inversamente proporcional).  
+
+## Resumen de otras medidas 
+
+otras medidas que nos serian utiles de saber son las medias y las medianas, por que esas nos dan una idea de como son los datos de cada componente 
+
+```{r}
+# Mediana CO2
+mediana_co2 = median(M$CO2, na.rm = FALSE)
+cat("La mediana de CO2 es: ",mediana_co2,"\n")
+
+# Mediana NO2
+mediana_NO2 = median(M$NO2, na.rm = FALSE)
+cat("La mediana de NO2 es: ",mediana_NO2,"\n")
+
+#Mediana CO 
+mediana_CO = median(M$CO, na.rm = FALSE)
+cat("La mediana de CO es: ",mediana_CO,"\n")
+
+# Mediana NO 
+mediana_NO = median(M$NO, na.rm = FALSE)
+cat("La mediana de NO es: ",mediana_NO,"\n")
+
+#Mediana O3
+mediana_O3 = median(M$O3, na.rm = FALSE)
+cat("La mediana de O3 es: ",mediana_O3,"\n")
+
+# Mediana NOX
+mediana_NOX = median(M$NOX, na.rm = FALSE)
+cat("La mediana de NOX es: ",mediana_NOX,"\n", "\n")
+
+# Media CO2
+media_co2 = mean(M$CO2)
+cat("La media de CO2 es:" , media_co2, "\n" )
+
+# Media NO2 
+media_NO2 = mean(M$NO2)
+cat("La media de NO2 es: ",media_NO2,"\n")
+
+# Media CO
+media_CO = mean(M$CO)
+cat("La media de CO es: ",media_CO,"\n")
+
+# Media NO 
+media_NO = mean(M$NO)
+cat("La media de NO es: ",media_NO,"\n")
+
+# Media O3
+media_O3 = mean(M$O3)
+cat("La media de O3 es: ",media_O3,"\n")
+
+#Media NOX
+media_NOX = mean(M$NOX)
+cat("La media de NOX es: ",media_NOX,"\n", "\n")
+
+```
+
+### Analisis de resultados
+
+Ya habiamos definido que $NO_x$ es nuestra variable dependiente, pero aqui podemos ver que es esa variable la que tiene la mayor media, lo que da sentido ya que es una combinacion de NO y $NO_2$ de cierta forma. 
+
+Tambien las medias nos sirven para saber cuales fueron los resultados a la mitad de el proceso. 
+
+Ahora vamos a hacer un analisis de Regresion lineal  individual para ver que variables se alinean con una regresion lineal y cuales no. 
+
+# Analisis de Regresion 
+
+## $CO_2$ y $NO_x$
+
+```{r}
+ACO_2 = lm(M$NOX~M$CO2)
+ACO_2
+plot(M$CO2,M$NOX, main="Regresion lineal CO2 y NOX" , ylab="NOx" , xlab="CO2" )
+abline(ACO_2, col="blue")
+text(30,200,"NOX = 27.333 + 1.503 CO_2 ")
+```
+nuestro modelo seria: 
+
+NOX = 27.333 + 1.503 $CO_2$
+
+
+## $NO_2$ y $NO_x$
+
+```{r}
+ANO_2 = lm(M$NOX~M$NO2)
+ANO_2
+plot(M$NO2,M$NOX, main="Regresion lineal NO2 y NOX" , ylab="NOx" , xlab="NO2" )
+abline(ANO_2, col="blue")
+text(17,200,"NOX = -11.895 + 2.072 NO_2")
+```
+
+nuestro modelo seria: 
+
+NOX = -11.895 + 2.072$NO_2$
+
+Como se puede ver en la grafica, el modelo si tiene forma de regresion lineal
+
+## $CO$ y $NO_x$
+
+```{r}
+ACO = lm(M$NOX~M$CO)
+ACO
+plot(M$NO2,M$NOX, main="Regresion lineal CO y NOX" , ylab="NOx" , xlab="CO" )
+abline(ACO, col="blue")
+text(20,200,"NOX = -1.674 + 71.803 CO ")
+```
+
+nuestro modelo seria: 
+
+NOX = -1.674 + 71.803 CO 
+
+Como se puede ver en la grafica, el modelo no sigue a los datos por mucho gracias a su variabilidad. s
+
+## $NO$ y $NO_x$
+
+```{r}
+ANO = lm(M$NOX~M$NO)
+ANO
+plot(M$NO2,M$NOX, main="Regresion lineal NO y NOX" , ylab="NOx" , xlab="NO" )
+abline(ANO, col="blue")
+text(20,200,"NOX = 17.754 + 1.284 NO  ")
+```
+
+nuestro modelo seria: 
+
+NOX = 17.754 + 1.284 NO
+
+como se puede ver en la grafica, los datos si parecen lineales, pero la dispersion de datos afecta al modelo y sube un poco mas la grafica. 
+
+## $O_3$ y $NO_x$
+
+```{r}
+AO_3 = lm(M$NOX~M$O3)
+AO_3
+plot(M$O3,M$NOX, main="Regresion lineal O3 y NOX" , ylab="NOx" , xlab="O3" )
+abline(AO_3, col="blue")
+text(40,200,"NOX = 49.8062 - 0.6934 $O_3$  ")
+```
+nuestro modelo seria: 
+
+NOX = 49.8062 - 0.6934 $O_3$
+
+Como podemos ver en la grafica, este modelo no parece lineal gracias a su curva. 
+
+Como ya tenemos nuestros modelos lineales, ahora tenemos que hacer los analisis de los supuestos que son 
+
+- Las betas son significantes
+
+- La media de los residuos es 0 
+
+- los residuos se distribuyen de una forma normal 
+
+- los residuos tienen variabilidad constante (homosedasticidad)
+
+## Significancia de $\beta_1$ 
+
+- $H_0 : \beta_1 = 0$
+
+- $H_1 : \beta_1 \neq 0$ 
+
+- nivel de significancia : 0.05 
+
+```{r}
+alpha = 0.05
+n= 1000 
+t_0 = qt(1-alpha/2, n-2) # doble cola 
+cat(" nuestro valor frontera t_0 es: ", t_0)
+```
+
+**Regla de desicion** 
+yo rechazo si: 
+regla clasica : |t*|> 1.96 
+regla de el valor p: p<0.05
+Distribución : t de student de dos colas 
+
+```{r}
+summary(ACO_2)
+summary(ANO_2)
+summary(ACO)
+summary(ANO)
+summary(AO_3)
+
+```
+## Analisis de resultados : 
+
+Como todas las |t*| son mayores a 1.96 y los valores de p son menores a 0.05 , podemos concluir que todas las betas son significantes. 
+
+Ahora vamos a analisar los residuos a ver si concuerdan con este modelo. 
+
+## Media 0 
+
+- $H_0$ : $\mu$ = 0 
+
+- $H_1$ : $\mu$ ≠ 0 
+
+- Distribucion : T de student con dos colas 
+
+```{r}
+alpha = 0.05
+n= 1000 
+t_0 = qt(1-alpha/2, n-2) # doble cola 
+cat(" nuestro valor frontera t_0 es: ", t_0)
+```
+
+yo rechazo si: 
+
+- |t*|>1.962344
+
+- p< 0.05 
+
+vamos a usar la funcion t.test() para calcular la media de los residuos 
+
+```{r}
+
+t.test(ACO_2$residuals, alternative= "two.sided")
+
+t.test(ANO_2$residuals, alternative = "two.sided")
+
+t.test(ACO$residuals, alternative = "two.sided")
+
+t.test(ANO$residuals, alternative = "two.sided")
+
+t.test(AO_3$residuals, alternative = "two.sided")
+
+```
+### Analisis de datos : 
+
+Como todas las |t*| son menores que 1.96, y todas las p son 1, no podemos rechazar $H_0$ y por lo tanto podemos concluir que todas las medias de los residuos tienen valor de 0. 
+
+
+## Analisis de normalidad : 
+
+- $H_0$ : los residuos se distribuyen normalmente
+
+- $H_1$ : los residuos no se distribuyen normalmente
+
+yo rechazo si : 
+
+p < 0.05 
+
+para hacer esto, vamos a usar la funcion shapiro.test() para poder medir la normalidad de los datos. 
+
+```{r}
+shapiro.test(ACO_2$residuals)
+
+shapiro.test(ANO_2$residuals)
+
+shapiro.test(ACO$residuals)
+
+shapiro.test(ANO$residuals)
+
+shapiro.test(AO_3$residuals)
+
+```
+### Analisis de resultados : 
+
+como todas las p son menores a 0.05, Tenemos que rechazar $H_0$, concluyendo que los modelos de los residuos no tienen normalidad. 
+
+
+## Homosedasticidad 
+
+Para el analisis de homosedasticidad, vamos a graficar los residuos y sus valores ajustados y vamos a poner una linea en 0 para ver como se distribuyen 
+
+
+```{r}
+plot (ACO_2$fitted.values, ACO_2$residuals ,main="residuos de CO2 con NOx")
+abline(h=0,col="red")
+plot (ANO_2$fitted.values, ANO_2$residuals ,main="residuos de NO2 con NOx")
+abline(h=0,col="red")
+plot (ACO$fitted.values, ACO$residuals ,main="residuos de CO con NOx")
+abline(h=0,col="red")
+plot (ANO$fitted.values, ANO$residuals ,main="residuos de NO con NOx")
+abline(h=0,col="red")
+plot (AO_3$fitted.values, AO_3$residuals ,main="residuos de O3 con NOx")
+abline(h=0,col="red")
+```
+Visualmente, ninguna de ellas cumple con la homosedasticidad ya que no hay simetria entre lo que esta abajo y lo que esta arriba de la linea 0 , asi que estos modelos no tienen una varianza constante en los residuos, lo que desmiente un modelo lineal. 
+
+
+
+# Regresion lineal multiple. 
+
+Los modelos lineales individuales no son tan efectivos para nuestra investigacion, ya que no nos dan la perspectiva completa de todos los componentes en relacion a $NO_x$, por lo tanto  me gustaria obtener  el mejor modelo lineal multiple y ver que tan bueno es ese modelo para nuestra investigacion
+
+
+Como ya habiamos acordado que $NO_x$ es nuestra variable independiente, vamos a utilizarla como nuestra y en el modelo lineal. 
+
+## Datos de el primer modelo
+
+lo primero que quiero comparar es si hay variables x que tengan una correlacion alta. 
+
+```{r}
+M1=M[,-1:-3]
+cor(M1)
+plot(M1, col="blue")
+```
+### Analisis de resultados: 
+
+Como CO y NO tienen una correlacion de 0.888, voy a quitar NO ya que si los dos tienen la misma correlacion, explican practicamente lo mismo de el modelo y una prioridad es la economia de datos. 
+
+**Y**=NOx
+
+**X** = CO, CO2 , O3 , NO2
+```{r}
+A1 =lm(M$NOX~M$CO+M$CO2+M$O3+M$NO2)
+A1
+```
+
+nuestro modelo lineal queda de la siguiente manera: 
+
+**NOX** =  -1.9849 +     61.6340CO  +     0.4438CO2   +   -0.1085O3   +    0.3300NO2
+
+Como ya tenemos nuestro modelo lineal, ahora tenemos que sacar el analisis de los supuestos. Los cuales son: 
+
+- Significancia de las betas 
+
+- media de los residuos = 0 
+
+- varianza constante de los residuos (Homosedasticidad)
+
+- Distribucion normal de los residuos
+
+## Significancia de las betas
+
+- $H_0$ : $\beta_i$= 0 
+
+- $H_1$ : $\beta_i$ ≠0 
+
+- alfa = 0.05 
+
+```{r}
+n=1000
+k=3
+alfa =0.05
+t_0 = qt(1-alfa/2 , n-k-1)
+cat(" mi valor frontera es: ", t_0, "\n")
+```
+
+yo rechazo si: 
+
+|t*| > 1.962349
+
+p< 0.05 
+
+```{r}
+summary(A1)
+```
+
+Como todas las betas son mas grandes que mi t_0 y mis p son menores que 0.05, puedo decir que todas las betas tienen significancia. 
+
+Tambien podemos ver que los residuos no tienen una simetria, lo que es una mala señal para la normalidad de los residuos. 
+
+Podemos ver que esta modelo lineal nos explica alrededor de el 91.12% de los datos, lo cual es una buena señal de que nuestro modelo es bueno para darnos informacion de los datos. 
+
+Tambien podemos ver que CO2 tiene la menor significancia, ya que tiene el menor valor de t*, entonces vamos a quitar CO2 para ver que tanto del modelo nos explica a comparacion
+
+# Segundo modelo
+
+Variable y= NOX 
+
+variables x = CO, O3 NO2
+
+## Ecuacion 
+
+```{r}
+A2 = lm(M$NOX~M$CO+M$O3+M$NO2)
+A2
+```
+
+ **NOX** = -2.53689  +   61.37287 CO +    -0.09171 O3  +    0.39173 NO2
+ 
+# Analisis de supuestos 2 
+ 
+## Significancia de $\beta_i$
+ 
+ $H_0$: $\beta_i = 0$ 
+
+$H_1$: $\beta_i ≠ 0$
+
+Estimador: T de student
+
+```{r}
+alfa = 0.05 
+n=1000 
+k = 3 
+t_0 = qt(1-0.05/2 , n-k-1)
+t_0
+```
+- yo rechazo si: 
+  
+  - Regla clasica: |t*|>1.96
+  
+  - Regla de valor p : p<0.05
+  
+
+### Analisis de los resultados 
+```{r}
+summary(A2)
+```
+
+Aqui todas las betas tienen significancia por que todas las |t*| son mayores a 1.96 y las p son menores que 0.05 , pero como si es un cambio muy grande de 90.74% a 91.12%, me voy a quedar con el primer modelo.
+
+
+y ahora voy a hacer el analisis de los residuos. 
+
+# Analisis de residuos 
+
+## Media Cero
+
+- $H_0 : \mu=0$ 
+
+- $H_1: \mu≠0$ 
+
+obtension de el valor frontera
+
+```{r}
+alfa = 0.05
+n = 1000
+t_0 = qt(1-alfa/2,n-1)
+t_0
+```
+Yo rechazo si: 
+
+- Regla clasica: |t*|>1.96
+- Regla de valor p : p<0.05
+
+```{r}
+t.test(A1$residuals,  alternative = "two.sided")
+
+```
+Aqui podemos ver que: 
+- el valor de t* es mucho menor que el valor de t_0 y el valor de p es mayor que el valor de alfa, por lo cual no puedo rechazar la hipotesis, lo que significa que la media si es de 0 
+
+## igualdad de varianzas (Homcedasticidad)
+
+- y= los residuos 
+
+- x = la y estimada 
+
+```{r}
+
+plot(A1$fitted.values , A1$residuals , ylab = "Residuos" , xlab = "y estimada")
+abline(h=0 , col="Green")
+```
+De aqui podemos ver que: 
+
+Los datos empiezan muy pegados a la linea y conforme la y estimada se va alejando, Esto significa que la varianza va cambiando y que no tiene homocedasticidad. 
+
+
+# Analisis de normalidad 
+
+- $H_0$ : los datos se distribuyen en una normal
+
+- $H_1$ : los datos no se distribuyen en una normal
+
+- nivel de significancia $\alpha$ = 0.05
+
+
+yo rechazo si: 
+Regla de valor p : p< 0.05 
+
+vamos a usar la funcion shapiro.test para sacar la normalidad de los residuos. 
+```{r}
+shapiro.test(A1$residuals)
+qqnorm(A1$residuals, ylab = "probabilidad" , xlab= "Residuos", main="grafica de probabilidad de la normal")
+qqline(A1$residuals)
+hist(A1$residuals, xlab = "Residuos" , ylab = "frecuencia" , main = "Histograma de los residuos")
+
+```
+
+aqui podemos concluir que: 
+
+- Segun el histograma: tenemos mas datos en la derecha, lo que no nos muestra normalidad. 
+
+- Segun la grafica: la forma es mas de una grafica de colas gruesas, lo que tampoco nos muestra una normalidad. 
+
+- Como el valor p es mucho menor que el valor p esperado de 0.05, tenemos que rechazar la hipotesis, lo que nos dice que no se comportan normalmente los residuos. 
+
+
+Aunque el modelo tiene explica un nivel alto de los datos, es importante comprobar si un modelo no lineal explicaria una mayor cantidad de datos
+
+# Regresion no lineal
+
+```{r}
+plot(M1)
+cor(M1)
+```
+
+Como NO tiene correlacion con CO, Quitamos NO 
+
+La variable independiente es NOx 
+
+las variables independientes son : CO2 , CO, NO2 y O3
+
+De forma visual, NO2 tiene forma de funcion cuadratica , y O3 tiene forma de un exponencial negativo asi que vamos a intentar cambiando el modelo con esas funciones en mente
+
+$NO_x = \beta_0 + \beta_1 z_1 + \beta_2 z_2 + \beta_3 z_3 + \beta_4 z_4$
+$z_1$ = $CO_2$
+$z_2$ = CO
+$z_3$ = $(NO_2)^2$
+$z_4$ = $e^{-O_3}$
+
+```{r}
+z_1 = M$CO2
+z_2 = M$CO
+z_3 = -(M$NO2)^2
+z_4 = exp(-M$O3)
+A = lm(M$NOX~z_1+z_2+z_3+z_4)
+A
+```
+
+$NO_x =-1.932497 + 0.331597CO_2 + 60.132854CO  +0.007549NO_2^2 + 18.015475e^{-O3}$
+
+Ahora que ya tenemos nuestro modelo, Tenemos que comprobar Todos los supuestos de un modelo no lineal: 
+
+- Significancia de las betas
+
+- Media de los residuos = 0 
+
+- Distribucion normal de los residuos 
+
+- variabilidad constante (Homosedasticidad)
+
+primero vamos a sacar la significancia de las betas 
+
+- $H_0$ : $\beta_i$ = 0
+
+- $H_1$ : $\beta_i$ ≠ 0 
+
+- Valor de significancia : 0.05 
+```{r}
+n=1000
+k=5
+alpha=0.05
+t_0 = qt(1-alpha/2 , n-k-1)
+cat (" el valor de t_0 es ", t_0 , "\n")
+```
+yo rechazo si: 
+
+|t*| > 1.9623 
+
+p < 0.05 
+
+```{r}
+summary(A)
+```
+como todos los |t*| son mayores que 1.96, podemos rechazar $H_0$ y decir que todas las betas son significantes. 
+
+Tambien podemos ver que el modelo explica el 91.15% de nuesteos datos, lo que es un 0.03% mas que el modelo lineal anterior. 
+
+Al igual que en el modelo lineal multiple, tenemos que probar quitando datos a ver si el porcentaje de explicacion de los datos cambia mucho. 
+
+primero vamos a intentar con CO2 por que segun su t*, es el valor con menos significancia. 
+
+$NO_x = \beta_0 +  \beta_2 z_2 + \beta_3 ln(z_3) + \beta_4 z_4$
+$z_2$ = CO
+$z_3$ = $(NO_2)^2$
+$z_4$ = $e^{-O_3}$
+
+```{r}
+A_2 = lm(M$NOX~z_2+z_3+z_4)
+A_2
+```
+
+$NO_x = -6.17282 + 59.97142 CO + 0.45528 ln(NO_2) + 18.40019 e^{-O_3}$
+
+Ahora vamos a hacer el analisis de las betas que ya hicimos anteriormente
+
+- $H_0$ : $\beta_i$ = 0
+
+- $H_1$ : $\beta_i$ ≠ 0 
+
+- Valor de significancia : 0.05 
+```{r}
+n=1000
+k=5
+alpha=0.05
+t_0 = qt(1-alpha/2 , n-k-1)
+cat (" el valor de t_0 es ", t_0 , "\n")
+```
+yo rechazo si: 
+
+|t*| > 1.9623 
+
+p < 0.05 
+
+```{r}
+summary(A_2)
+```
+
+
+como la r ajustada me cambio mucho, voy a quedarme con el primer modelo 
+
+Ahora vamos a hacer el analisis de los errores.
+
+# Analisis de los errores 
+
+## Homosedasticidad 
+
+Voy a graficar los residuos conforme a nuestra y estimada y vamos a ver como se distribuyen alrededor de 0 
+
+```{r}
+plot(A$fitted.values , A_2$residuals)
+abline(h=0, col="red")
+```
+visualmente, el modelo no tiene homosedasticidad, ya que hay mas dispersion de los datos conforme nuestros valores estimados aumentan
+
+
+## 1. Media 0 
+
+$H_0$ : $\mu$ = 0 
+
+$H_1$ : $\mu$ ≠ 0 
+
+```{r}
+t_0 = qt(1-alpha/2,n-k-1)
+t_0
+```
+yo rechazo si: 
+
+|t*|> 1.962353 
+
+p<0.05 
+
+```{r}
+t.test(A$residuals)
+```
+como t* es un valor muy pequeño, no podemos rechazar $H_0$, por lo tanto podemos decir que la media de los residuos es 0 
+
+## Normalidad de los residuos 
+
+$H_0$ : la distribucion de los residuos es normal
+
+$H_1$ : la distribucion de los residuos no es normal
+
+yo rechazo si: 
+
+p<0.05 
+
+```{r}
+shapiro.test(A$residuals)
+qqnorm(A$residuals, ylab = "probabilidad" , xlab= "Residuos", main="grafica de probabilidad de la normal")
+qqline(A$residuals)
+hist(A$residuals, xlab = "Residuos" , ylab = "frecuencia" , main = "Histograma de los residuos")
+```
+## Analisis de resultados: 
+
+Como la p es menor que 0.05, no me queda de otra mas que rechazar $H_0$ por lo que los residuos no estan en una distribucion normal. 
+
+# Conclusiones: 
+
+Al replantearnos la pregunta que nos hicimos al principio, podemos concluir que los componentes mas relacion tienen a la contaminación del aire son O3, NO2, y CO, NO; CO2 es el que tiene el menor efecto (pero si tiene uno) y CO y NO estan relacionados entre si. Asi que si Hay una gran cantidad de CO, vas a saber que probablemente tambien haya una gran cantidad de NO. 
+
+Si en algun momento tu quieres predecir los datos futuros, el modelo que te dara una mayor chance de predecir correctamente es: 
+
+$NO_x =-1.932497 + 0.331597CO_2 + 60.132854CO  +0.007549NO_2^2 + 18.015475e^{-O3}$
+
